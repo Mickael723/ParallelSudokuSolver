@@ -1,7 +1,7 @@
 #include "classes.h"
 
 // Constructor: create empty puzzle space
-Puzzle::Puzzle(int size) {
+Puzzle::Puzzle(const int size) {
     this->size = size;
     puzzle_space.resize(size);
     for (int i = 0; i < size; ++i) {
@@ -9,7 +9,7 @@ Puzzle::Puzzle(int size) {
     }
 }
 
-bool Puzzle::checkPlacement(const int row, const int col, const int value) {
+bool Puzzle::checkPlacement(const int row, const int col, const int value) const{
     // Validate the input
         if (row < 0 || row >= 9 || col < 0 || col >= 9 || value < 1 || value > 9 || puzzle_space[row][col] != 0) {
             throw std::out_of_range("Row or column or value out of range (must be between 0 and 8) or cell if full.");
@@ -46,7 +46,7 @@ void Puzzle::placeValue(const int row, const int col, const int value) {
     puzzle_space[row][col] = value;
 }
 
-bool Puzzle::isSolved() {
+bool Puzzle::isSolved() const {
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < size; ++j) {
             if (puzzle_space[i][j] == 0) {
@@ -92,13 +92,32 @@ void Puzzle::readFile(const string& filename) {
     file.close();
 }
 
-Puzzle Puzzle::generateNewPuzzle(const int row, const int col, const int value) {
-    Puzzle newPuzzle = *this;
-    newPuzzle.placeValue(row, col, value);
+std::shared_ptr<Puzzle> Puzzle::generateNewPuzzle(const int row, const int col, const int value) const{
+    std::shared_ptr<Puzzle> newPuzzle(new Puzzle(size));
+    newPuzzle->puzzle_space = this->puzzle_space;
+    newPuzzle->placeValue(row, col, value);
     return newPuzzle;
 }
 
-void Puzzle::printPuzzle() {
+void Puzzle::enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const {
+    // Look for empty space
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            if (puzzle_space[i][j] == 0) {
+                // Attempt to fill space
+                for (int k = 1; k < size; ++k) {
+                    if (checkPlacement(i,j,k)) {
+                        std::shared_ptr<Puzzle> newPuzzle = generateNewPuzzle(i,j,k);
+                        queue.push(newPuzzle);
+                    }
+                }
+                
+            }
+        }
+    }
+}
+
+void Puzzle::printPuzzle() const {
     for (const auto& row : puzzle_space) {
         for (int val : row) {
             cout << val << " ";

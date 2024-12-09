@@ -6,6 +6,9 @@
 #include <sstream>
 #include <fstream>
 #include <cmath>
+#include <queue>
+#include <chrono>
+#include <memory>
 
 using std::vector;
 using std::cout;
@@ -18,14 +21,27 @@ class Puzzle {
         vector<vector<int> > puzzle_space;
     public:
         // Constructor: create empty puzzle space
-        Puzzle(const int size = 0, const std::vector<std::vector<int>>& initialGrid) : size(size), puzzle_space(initialGrid) {}
+        Puzzle(const int size = 0);
+
+        Puzzle(const Puzzle& other) : size(other.size), puzzle_space(other.puzzle_space) {}
+
+        Puzzle& operator=(const Puzzle& other) {
+            if (this == &other) {
+                return *this;
+            }
+            size = other.size;
+            puzzle_space = other.puzzle_space;
+
+            return *this; 
+        }
         void readFile(const string& filename);
         // Checks if a value can be placed at the specified location
-        bool checkPlacement(const int row, const int col, const int value);
+        bool checkPlacement(const int row, const int col, const int value) const;
         // Checks if puzzle is solved
-        bool isSolved();
+        bool isSolved() const;
         void placeValue(const int row, const int col, const int value);
         // Generates new puzzle states given the current state.
-        Puzzle generateNewPuzzle(const int row, const int col, const int value);
-        void printPuzzle();
+        std::shared_ptr<Puzzle> generateNewPuzzle(const int row, const int col, const int value) const;
+        void enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const;
+        void printPuzzle() const;
 };
