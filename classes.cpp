@@ -105,13 +105,13 @@ void Puzzle::enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const {
         for (int j = 0; j < size; ++j) {
             if (puzzle_space[i][j] == 0) {
                 // Attempt to fill space
-                for (int k = 1; k < size; ++k) {
+                for (int k = 1; k < size + 1; ++k) {
                     if (checkPlacement(i,j,k)) {
                         std::shared_ptr<Puzzle> newPuzzle = generateNewPuzzle(i,j,k);
                         queue.push(newPuzzle);
                     }
                 }
-                
+                return;
             }
         }
     }

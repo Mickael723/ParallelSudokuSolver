@@ -12,6 +12,9 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
     while (!puzzle_queue.empty()) {
         auto puzzle = puzzle_queue.front();
+        cout << "Popped puzzle from queue:" << endl;
+        puzzle->printPuzzle();
+        cout << endl;
         puzzle_queue.pop();
         if (puzzle->isSolved()) {
             cout << "The puzzle has been solved!: " << endl;
