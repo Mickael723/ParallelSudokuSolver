@@ -1,5 +1,7 @@
 #include "classes.h"
 
+extern std::mutex mtx;
+
 // Constructor: create empty puzzle space
 Puzzle::Puzzle(const int size) {
     this->size = size;
@@ -108,7 +110,9 @@ void Puzzle::enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const {
                 for (int k = 1; k < size + 1; ++k) {
                     if (checkPlacement(i,j,k)) {
                         std::shared_ptr<Puzzle> newPuzzle = generateNewPuzzle(i,j,k);
+                        std::lock_guard<std::mutex> lock(mtx);
                         queue.push(newPuzzle);
+                        
                     }
                 }
                 return;

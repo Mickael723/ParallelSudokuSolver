@@ -9,6 +9,8 @@
 #include <queue>
 #include <chrono>
 #include <memory>
+#include <omp.h>
+#include <mutex>
 
 using std::vector;
 using std::cout;
