@@ -2,10 +2,10 @@
 #include "classes.h"
 
 int main() {
+    vector<vector<int> > s();
     Puzzle p(9);
     p.readFile("test.txt");
     p.printPuzzle();
-    cout << p.checkPlacement(1,0,3) << endl;
-    cout << p.checkPlacement(1,0,1) << endl;
+    if (!p.isSolved()) { cout << "Puzzle not solved." << endl;}
     p.printPuzzle();
 }

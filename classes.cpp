@@ -38,8 +38,22 @@ bool Puzzle::checkPlacement(const int row, const int col, const int value) {
             }
         }
     }
-    // Place value
+    
+    return true;
+}
+
+void Puzzle::placeValue(const int row, const int col, const int value) {
     puzzle_space[row][col] = value;
+}
+
+bool Puzzle::isSolved() {
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            if (puzzle_space[i][j] == 0) {
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -76,6 +90,12 @@ void Puzzle::readFile(const string& filename) {
         throw std::runtime_error("Puzzle File is invalid");
     }
     file.close();
+}
+
+Puzzle Puzzle::generateNewPuzzle(const int row, const int col, const int value) {
+    Puzzle newPuzzle = *this;
+    newPuzzle.placeValue(row, col, value);
+    return newPuzzle;
 }
 
 void Puzzle::printPuzzle() {
