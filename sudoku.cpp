@@ -2,15 +2,17 @@
 #include "classes.h"
 
 void execute(TSQueue<std::shared_ptr<Puzzle>>& puzzle_queue, std::atomic<bool>& puzzleSolved, 
-                std::mutex& print_mtx) {
+                std::atomic<int>& puzzlesPopped) {
     while (!puzzle_queue.empty() && !puzzleSolved) {
-        auto maybePuzzle = puzzle_queue.pop();
+        auto maybePuzzle = puzzle_queue.pop(); // Need to make sure thread popped a puzzle to avoid seg faults.
         if (!maybePuzzle.has_value()) {continue;}
+        puzzlesPopped++;
         auto puzzle = maybePuzzle.value();
         if (puzzle->isSolved()) {
             puzzleSolved = true;
-            std::cout << "The puzzle has been solved!" << std::endl;
+            cout << "The puzzle has been solved!" << endl;
             puzzle->printPuzzle();
+            cout << "Looked at " << puzzlesPopped << " states in total." << endl;
             break;
         }
         puzzle->enqueuePuzzles(puzzle_queue);
@@ -40,10 +42,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // Create initial puzzle state and the queue.
     Puzzle p(puzzle_size);
     TSQueue<std::shared_ptr<Puzzle> > puzzle_queue;
+
     std::atomic<bool> puzzleSolved(false);
-    std::mutex print_mtx;
 
     p.readFile(file_name);
 
@@ -52,13 +55,16 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<Puzzle> startingPuzzle = std::make_shared<Puzzle>(p);;
     puzzle_queue.push(startingPuzzle);
+    std::atomic<int> puzzlesPopped(0); 
+
+    cout << "Solving..." << endl;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     // Create and start threads
     std::vector<std::thread> threads;
     for (int i = 0; i < num_threads; ++i) {
-        threads.emplace_back(execute, std::ref(puzzle_queue), std::ref(puzzleSolved), std::ref(print_mtx));
+        threads.emplace_back(execute, std::ref(puzzle_queue), std::ref(puzzleSolved), std::ref(puzzlesPopped));
     }
 
     // Join all threads

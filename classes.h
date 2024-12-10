@@ -27,6 +27,7 @@ class TSQueue {
         mutable std::mutex mtx;
         std::condition_variable cond_var;
     public:
+    
         void push(T object) {
             {
                 std::scoped_lock lock(mtx);
@@ -34,10 +35,12 @@ class TSQueue {
             }
             cond_var.notify_one();
         }
+
+        // Combining pop() and front() functions of an std::queue to avoid race conditions
         std::optional<T> pop() {
             std::unique_lock<std::mutex> lock(mtx);
             cond_var.wait(lock, [this] { return !queue.empty(); });
-            
+
             if (queue.empty()) {
                 return std::nullopt; // Return empty optional if queue is empty
             }
