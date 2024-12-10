@@ -1,7 +1,5 @@
 #include "classes.h"
 
-extern std::mutex mtx;
-
 // Constructor: create empty puzzle space
 Puzzle::Puzzle(const int size) {
     this->size = size;
@@ -13,7 +11,7 @@ Puzzle::Puzzle(const int size) {
 
 bool Puzzle::checkPlacement(const int row, const int col, const int value) const{
     // Validate the input
-        if (row < 0 || row >= 9 || col < 0 || col >= 9 || value < 1 || value > 9 || puzzle_space[row][col] != 0) {
+        if (row < 0 || row >= size || col < 0 || col >= size || value < 1 || value > size || puzzle_space[row][col] != 0) {
             throw std::out_of_range("Row or column or value out of range (must be between 0 and 8) or cell if full.");
         }
     // Check same row
@@ -69,26 +67,26 @@ void Puzzle::readFile(const string& filename) {
     int row = 0;
 
     while (getline(file, line)) {
-        if (row >= 9) {
+        if (row >= size) {
             throw std::runtime_error("File contains more than 9 rows.");
         }
         std::istringstream lineStream(line);
         int value, col = 0;
 
         while (lineStream >> value) {
-            if (col >= 9 || value < 0 || value > 9) {
+            if (col >= size || value < 0 || value > size) {
                 throw std::runtime_error("Puzzle File is invalid");
             }
 
             puzzle_space[row][col] = value;
             ++col;
         }
-        if (col != 9) {
+        if (col != size) {
             throw std::runtime_error("Puzzle File is invalid");
         }
         ++row;
     }
-    if (row != 9) {
+    if (row != size) {
         throw std::runtime_error("Puzzle File is invalid");
     }
     file.close();
@@ -101,7 +99,7 @@ std::shared_ptr<Puzzle> Puzzle::generateNewPuzzle(const int row, const int col, 
     return newPuzzle;
 }
 
-void Puzzle::enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const {
+void Puzzle::enqueuePuzzles(TSQueue<std::shared_ptr<Puzzle> > &queue) const {
     // Look for empty space
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < size; ++j) {
@@ -110,7 +108,6 @@ void Puzzle::enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const {
                 for (int k = 1; k < size + 1; ++k) {
                     if (checkPlacement(i,j,k)) {
                         std::shared_ptr<Puzzle> newPuzzle = generateNewPuzzle(i,j,k);
-                        std::lock_guard<std::mutex> lock(mtx);
                         queue.push(newPuzzle);
                         
                     }

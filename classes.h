@@ -9,13 +9,49 @@
 #include <queue>
 #include <chrono>
 #include <memory>
-#include <omp.h>
 #include <mutex>
+#include <condition_variable>
+#include <optional>
+#include <atomic>
+#include <thread>
 
 using std::vector;
 using std::cout;
 using std::endl;
 using std::string;
+
+template<typename T>
+class TSQueue {
+    private:
+        std::queue<T> queue;
+        mutable std::mutex mtx;
+        std::condition_variable cond_var;
+    public:
+        void push(T object) {
+            {
+                std::scoped_lock lock(mtx);
+                queue.push(std::move(object));
+            }
+            cond_var.notify_one();
+        }
+        std::optional<T> pop() {
+            std::unique_lock<std::mutex> lock(mtx);
+            cond_var.wait(lock, [this] { return !queue.empty(); });
+            
+            if (queue.empty()) {
+                return std::nullopt; // Return empty optional if queue is empty
+            }
+
+            T object = std::move(queue.front());
+            queue.pop();
+            return object;
+        }
+
+        bool empty() const {
+            std::scoped_lock lock(mtx);
+            return queue.empty();
+        }
+};
 
 class Puzzle {
     private:
@@ -44,6 +80,6 @@ class Puzzle {
         void placeValue(const int row, const int col, const int value);
         // Generates new puzzle states given the current state.
         std::shared_ptr<Puzzle> generateNewPuzzle(const int row, const int col, const int value) const;
-        void enqueuePuzzles(std::queue<std::shared_ptr<Puzzle> > &queue) const;
+        void enqueuePuzzles(TSQueue<std::shared_ptr<Puzzle> > &queue) const;
         void printPuzzle() const;
 };
